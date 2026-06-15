@@ -1,12 +1,72 @@
 {
-  "team": "TODO-team-name",
+  "team": "local",
   "schema_version": 1,
   "findings": [
     {
+      "fault_class": "tool_failure",
+      "evidence": {"metric": "config.catalog_override", "observed": "macbook forced out of stock in shipped config", "trace_ids": []},
+      "root_cause": "catalog_override changed product truth before the agent called tools",
+      "suggested_fix": "clear catalog_override and enable normalize_unicode"
+    },
+    {
+      "fault_class": "arithmetic_error",
+      "evidence": {"metric": "prompt/config inspection", "observed": "temperature 1.6 and weak prompt allowed estimated totals", "trace_ids": []},
+      "root_cause": "high randomness plus no exact arithmetic instruction",
+      "suggested_fix": "temperature 0.2 and prompt formula subtotal, discount, shipping, total"
+    },
+    {
+      "fault_class": "pii_leak",
+      "evidence": {"metric": "public/practice questions include phone/email", "observed": "original prompt did not forbid repeating contact info", "trace_ids": []},
+      "root_cause": "redact_pii disabled and prompt omitted privacy rule",
+      "suggested_fix": "enable redact_pii and redact wrapper output"
+    },
+    {
+      "fault_class": "prompt_injection",
+      "evidence": {"metric": "private phase rule", "observed": "order notes can contain fake system prices", "trace_ids": []},
+      "root_cause": "agent may treat user notes as instructions instead of data",
+      "suggested_fix": "prompt says notes are data only; wrapper strips obvious instruction-note suffixes"
+    },
+    {
+      "fault_class": "fabrication",
+      "evidence": {"metric": "raw prompt behavior", "observed": "original prompt allowed totals even when stock, product, or shipping was unavailable", "trace_ids": []},
+      "root_cause": "agent answered from language priors instead of refusing when tools could not ground an order",
+      "suggested_fix": "require tool-grounded stock/shipping data and no-total refusal for unknown, out-of-stock, or unsupported destinations"
+    },
+    {
+      "fault_class": "tool_overuse",
+      "evidence": {"metric": "tool policy", "observed": "original config had no tool budget and prompt encouraged extra checks", "trace_ids": []},
+      "root_cause": "no per-request tool cap or one-call-per-tool instruction",
+      "suggested_fix": "set tool_budget to 4 and prompt each tool at most once in required order"
+    },
+    {
       "fault_class": "latency_spike",
-      "evidence": {"metric": "latency_p95_ms", "observed": "TODO from your telemetry", "trace_ids": []},
-      "root_cause": "TODO: what config knob or behavior causes it?",
-      "suggested_fix": "TODO: config change and/or wrapper mitigation"
+      "evidence": {"metric": "sealed latency", "observed": "deepseek public run p90 latency was above 70s on 120 requests", "trace_ids": []},
+      "root_cause": "slow provider/model responses plus multi-tool calls and verbose generations",
+      "suggested_fix": "use faster endpoint/model when available, cap tool calls, reduce prompt/output verbosity, and cache repeated requests"
+    },
+    {
+      "fault_class": "cost_blowup",
+      "evidence": {"metric": "sealed usage", "observed": "deepseek public run averaged about 28k total tokens per request", "trace_ids": []},
+      "root_cause": "large hidden/tool prompt and reasoning-heavy completion path",
+      "suggested_fix": "short prompt, low max completion, no explanations, cache repeats, and cheaper model routing"
+    },
+    {
+      "fault_class": "quality_drift",
+      "evidence": {"metric": "score.drift", "observed": "baseline config had session_drift_rate 0.06 and no context reset", "trace_ids": []},
+      "root_cause": "long sessions accumulated noisy context and changed behavior over turns",
+      "suggested_fix": "set session_drift_rate to 0 and reset context periodically"
+    },
+    {
+      "fault_class": "error_spike",
+      "evidence": {"metric": "sealed errors", "observed": "previous public run had provider 429/503 errors that produced wrapper_error rows", "trace_ids": []},
+      "root_cause": "provider quota/high-demand exceptions escaped call_next without wrapper fallback",
+      "suggested_fix": "catch call_next exceptions, retry with backoff, and return a safe no-total fallback if provider remains unavailable"
+    },
+    {
+      "fault_class": "infinite_loop",
+      "evidence": {"metric": "config.loop_guard", "observed": "baseline config disabled loop_guard with max_steps 12", "trace_ids": []},
+      "root_cause": "agent could repeatedly call tools or continue planning without a strict stop condition",
+      "suggested_fix": "enable loop_guard, lower max_steps, and cap tool_budget"
     }
   ]
 }
